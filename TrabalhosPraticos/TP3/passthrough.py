@@ -60,7 +60,7 @@ class Passthrough(Operations):
                                 tokenR = input() 
                                 if(tokenR == tokenEnviar):
                                     signal.alarm(0)  #se chegar ca em 30s cancela o timeout                           
-                                    os.chmod("utilizadores.txt", 400)
+                                    os.chmod("utilizadores.txt", 444)
                                     return os.open(full_path, flags)
                                 else: 
                                     #os.chmod("utilizadores.txt", 000)                                
@@ -69,7 +69,7 @@ class Passthrough(Operations):
                                     return 0                            
                             except IOError: #alarme ultrapassou
                                 #os.chmod("utilizadores.txt", 000)
-                                print("\nExcedeu o tempo limite.\n")
+                                print("\nToken nao chegou a tempo\n")
                         else : 
                             #os.chmod("utilizadores.txt", 000)
                             print("Erro no envio da mensagem")
