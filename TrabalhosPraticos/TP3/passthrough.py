@@ -4,13 +4,30 @@ from __future__ import with_statement
 
 import os
 import sys
+import signal
 import errno
 import time
+import random
+import nexmo
+
 
 from fuse import FUSE, FuseOSError, Operations
 
+def enviarSMS(tokenEnviar, numero):
+    sms = nexmo.Client(key='06b932d7', secret='d6cwUZDsyWBTZSlS')
+    try:
+        sms.send_message({
+            'from': 'Vonage APIs',
+            'to': numero,
+            'text': 'Ola este é o token '+tokenEnviar,
+        })
+        return True
+    except:
+        print("falha no envio da mensagem")
+        return False
+
 def timeout(signum, frame):
-    raise IOError("Token não chegou a tempo")
+    raise IOError("Token nao chegou a tempo")
 
 class Passthrough(Operations):
     def __init__(self, root):
@@ -19,20 +36,23 @@ class Passthrough(Operations):
     def open(self, path, flags):
         full_path = self._full_path(path)
 
-        #Perguntar quem é
+        #Perguntar quem e
         print("Insira username:")
         username = input()
-
+        os.chmod("utilizadores.txt", 400)
         with open("utilizadores.txt", 'r') as fich:
+        
             for linha in fich:
                 utilizador = linha.split(' ')
-
+                print(utilizador[0])
+                print(utilizador[1])
                 if(utilizador[0] == username):
                     #enviar sms com token
 
                     tokenEnviar = str(random.randint(100000, 999999))
-                    enviou = os.system("send_an_sms.py {} {}",format(tokenEnviar,utilizador[1]))
 
+                    enviou = enviarSMS(tokenEnviar,utilizador[1])
+                    os.chmod("utilizadores.txt", 000)
                     if enviou :
                         tempoEspera = 30
                         try:
@@ -41,18 +61,22 @@ class Passthrough(Operations):
                             print("Introduza token recebido:")
                             tokenR = input() 
                             if(tokenR == tokenEnviar):
-                                signal.alarm(0)  #se chegar cá em <30s cancela o timeout                           
-                                #os.chmod("utilizadores.txt", 000)
+                                signal.alarm(0)  #se chegar ca em 30s cancela o timeout                           
+                                os.chmod("utilizadores.txt", 400)
                                 return os.open(full_path, flags)
-                            else:                                 
-                                print("Código Incorreto!")
+                            else: 
+                                #os.chmod("utilizadores.txt", 000)                                
+                                print("Codigo Incorreto!")
                                 signal.alarm(0)                                   
                                 return 0                            
                         except IOError: #alarme ultrapassou
                             #os.chmod("utilizadores.txt", 000)
                             print("\nExcedeu o tempo limite.\n")
                     else : 
-                        print("era só jajão")
+                        #os.chmod("utilizadores.txt", 000)
+                        print("Erro no envio da mensagem")
+                else:
+                    print("Utilizador desconhecido!")
 
 
 
@@ -139,9 +163,6 @@ class Passthrough(Operations):
     # File methods
     # ============
 
-    def open(self, path, flags):
-        full_path = self._full_path(path)
-        return os.open(full_path, flags)
 
     def create(self, path, mode, fi=None):
         full_path = self._full_path(path)
@@ -172,7 +193,8 @@ class Passthrough(Operations):
 
 
 def main(mountpoint, root):
+    os.chmod("utilizadores.txt", 000)
     FUSE(Passthrough(root), mountpoint, nothreads=True, foreground=True)
 
 if __name__ == '__main__':
-    main(sys.argv[4], sys.argv[3])
+    main(sys.argv[2], sys.argv[1])
