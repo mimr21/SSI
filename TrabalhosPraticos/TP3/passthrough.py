@@ -35,49 +35,49 @@ class Passthrough(Operations):
 
     def open(self, path, flags):
         full_path = self._full_path(path)
-
+        fl = 1
         #Perguntar quem e
-        print("Insira username:")
-        username = input()
-        os.chmod("utilizadores.txt", 400)
-        with open("utilizadores.txt", 'r') as fich:
-        
-            for linha in fich:
-                utilizador = linha.split(' ')
-                print(utilizador[0])
-                print(utilizador[1])
-                if(utilizador[0] == username):
-                    #enviar sms com token
-
-                    tokenEnviar = str(random.randint(100000, 999999))
-
-                    enviou = enviarSMS(tokenEnviar,utilizador[1])
-                    os.chmod("utilizadores.txt", 000)
-                    if enviou :
-                        tempoEspera = 30
-                        try:
-                            signal.signal(signal.SIGALRM, timeout)
-                            signal.alarm(tempoEspera)
-                            print("Introduza token recebido:")
-                            tokenR = input() 
-                            if(tokenR == tokenEnviar):
-                                signal.alarm(0)  #se chegar ca em 30s cancela o timeout                           
-                                os.chmod("utilizadores.txt", 400)
-                                return os.open(full_path, flags)
-                            else: 
-                                #os.chmod("utilizadores.txt", 000)                                
-                                print("Codigo Incorreto!")
-                                signal.alarm(0)                                   
-                                return 0                            
-                        except IOError: #alarme ultrapassou
+        try:
+            print("Insira username:")
+            username = input()
+            os.chmod("utilizadores.txt", 400)
+            with open("utilizadores.txt", 'r') as fich:        
+                for linha in fich:
+                    utilizador = linha.split(' ')
+                    if(utilizador[0] == username):
+                        #enviar sms com token
+                        fl = 0
+                        tokenEnviar = str(random.randint(100000, 999999))
+    
+                        enviou = enviarSMS(tokenEnviar,utilizador[1])
+                        os.chmod("utilizadores.txt", 000)
+                        if enviou :
+                            tempoEspera = 30
+                            try:
+                                signal.signal(signal.SIGALRM, timeout)
+                                signal.alarm(tempoEspera)
+                                print("Introduza token recebido:")
+                                tokenR = input() 
+                                if(tokenR == tokenEnviar):
+                                    signal.alarm(0)  #se chegar ca em 30s cancela o timeout                           
+                                    os.chmod("utilizadores.txt", 400)
+                                    return os.open(full_path, flags)
+                                else: 
+                                    #os.chmod("utilizadores.txt", 000)                                
+                                    print("Codigo Incorreto!")
+                                    signal.alarm(0)                                   
+                                    return 0                            
+                            except IOError: #alarme ultrapassou
+                                #os.chmod("utilizadores.txt", 000)
+                                print("\nExcedeu o tempo limite.\n")
+                        else : 
                             #os.chmod("utilizadores.txt", 000)
-                            print("\nExcedeu o tempo limite.\n")
-                    else : 
-                        #os.chmod("utilizadores.txt", 000)
-                        print("Erro no envio da mensagem")
-                else:
+                            print("Erro no envio da mensagem")
+                if fl==1:
+                    os.chmod("utilizadores.txt", 000)
                     print("Utilizador desconhecido!")
-
+        except IOError:
+            print("the end")
 
 
 
